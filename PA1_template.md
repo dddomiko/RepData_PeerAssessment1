@@ -1,11 +1,6 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-author: "Dominik Koch"
-date: "Sunday, July 19, 2015"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
+Dominik Koch  
+Sunday, July 19, 2015  
 
 ### General preparation
 
@@ -13,7 +8,8 @@ At the beginning of the code all required R Packages are loaded. The working
 directory is needed for creating the data folder. And the seed is set for 
 reproducibility.
 
-```{r, message = FALSE}
+
+```r
 # Import packages
 library(knitr)
 library(caret)
@@ -31,7 +27,8 @@ set.seed(42)
 Download the zip file in the data folder and extract it. If there is no *data* folder yet, it
 will be created. The data will only be downloaded and unzipped once.
 
-```{r}
+
+```r
 # Data source (19.07.2015)
 url <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
 
@@ -54,23 +51,56 @@ if(!file.exists(file.path(wd,"data","activity.csv"))){
 list.files(file.path(wd,"data"))
 ```
 
+```
+## [1] "activity.csv" "data.zip"
+```
+
 ### Tasks
 
 ## 01: Loading and preprocessing the data
 
 In the next step the csv files will be imported
 
-```{r, echo = TRUE}
+
+```r
 # Load data
 data <- read.csv("data/activity.csv", stringsAsFactors=FALSE)
 
 # Check data
 dim(data)
+```
+
+```
+## [1] 17568     3
+```
+
+```r
 str(data)
+```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : chr  "2012-10-01" "2012-10-01" "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
+```r
 summary(data)
 ```
 
-The data set consists of `r nrow(data)` observations and `r ncol(data)` 
+```
+##      steps            date              interval     
+##  Min.   :  0.00   Length:17568       Min.   :   0.0  
+##  1st Qu.:  0.00   Class :character   1st Qu.: 588.8  
+##  Median :  0.00   Mode  :character   Median :1177.5  
+##  Mean   : 37.38                      Mean   :1177.5  
+##  3rd Qu.: 12.00                      3rd Qu.:1766.2  
+##  Max.   :806.00                      Max.   :2355.0  
+##  NA's   :2304
+```
+
+The data set consists of 17568 observations and 3 
 variables. 
 
 Definition of the variables:
@@ -82,7 +112,8 @@ Definition of the variables:
 In the following code block the class of the date variable is changed an a new
 timestamp variable is created.
 
-```{r, echo = TRUE}
+
+```r
 data$date <- as.Date(data$date)
 
 addZeros <- function(x){
@@ -103,6 +134,25 @@ data$chron <- as.POSIXct(strptime(paste(data$date,addColon(substrRight(addZeros(
 summary(data)
 ```
 
+```
+##      steps             date               interval     
+##  Min.   :  0.00   Min.   :2012-10-01   Min.   :   0.0  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   1st Qu.: 588.8  
+##  Median :  0.00   Median :2012-10-31   Median :1177.5  
+##  Mean   : 37.38   Mean   :2012-10-31   Mean   :1177.5  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   3rd Qu.:1766.2  
+##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0  
+##  NA's   :2304                                          
+##      chron                    
+##  Min.   :2012-10-01 00:00:00  
+##  1st Qu.:2012-10-16 05:58:45  
+##  Median :2012-10-31 11:57:30  
+##  Mean   :2012-10-31 11:30:49  
+##  3rd Qu.:2012-11-15 17:56:15  
+##  Max.   :2012-11-30 23:55:00  
+## 
+```
+
 
 ## 02: What is mean total number of steps taken per day?
 
@@ -112,26 +162,36 @@ Note: missing values can be ignored
 
 The data has to be grouped by day in order to add all steps of the day together.
 
-```{r, echo = TRUE}
+
+```r
 data.total <- data[,c("steps","date")] %>%
   group_by(date) %>%
   summarise(total_steps_day = sum(steps))
 ```
 
-```{r, echo = TRUE}
+
+```r
 hist(data.total$total_steps_day, 25,
      main = "Total number of steps taken each day",
      xlab = "Number of steps",
      ylab = "Frequency")
 ```
 
+![](./PA1_template_files/figure-html/unnamed-chunk-6-1.png) 
+
 - Calculate and report the mean and median total number of steps taken per day
 
-```{r, echo = TRUE}
+
+```r
 summary(data.total$total_steps_day, digits = 5)
 ```
 
-The mean `r as.character(round(mean(data.total$total_steps_day, na.rm = TRUE),2))` is only slightly larger than the median `r median(data.total$total_steps_day, na.rm = TRUE)`
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##      41    8841   10765   10766   13294   21194       8
+```
+
+The mean 10766.19 is only slightly larger than the median 10765
 
 ## 03: What is the average daily activity pattern?
 
@@ -139,7 +199,8 @@ The mean `r as.character(round(mean(data.total$total_steps_day, na.rm = TRUE),2)
 
 Calculate the average number of steps across all days.
 
-```{r, echo = TRUE}
+
+```r
 data.avg <- data[,c("steps","interval")] %>%
   group_by(interval) %>%
   summarise(avg_steps = mean(steps, na.rm = TRUE))
@@ -147,7 +208,8 @@ data.avg <- data[,c("steps","interval")] %>%
 data.avg$chron <- (addColon(substrRight(addZeros(data.avg$interval), 6)))
 ```
 
-```{r, echo = TRUE}
+
+```r
 data.avg$test <- as.POSIXct(strptime(data.avg$chron, "%H:%M:%S"))
 plot(data.avg$test, data.avg$avg_steps, type = "l",
      main = "average number of steps taken across all days",
@@ -155,28 +217,54 @@ plot(data.avg$test, data.avg$avg_steps, type = "l",
      ylab = "number of steps")
 ```
 
+![](./PA1_template_files/figure-html/unnamed-chunk-9-1.png) 
+
 - Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r, echo = TRUE}
+
+```r
 data.avg[which.max(data.avg$avg_steps),"chron"]
+```
+
+```
+## Source: local data frame [1 x 1]
+## 
+##      chron
+## 1 08:35:00
 ```
 
 ## 04: Imputing missing values
 
 - Calculate and report the total number of missing values in the dataset
 
-```{r, echo = TRUE}
+
+```r
 table(complete.cases(data))
 ```
 
-In total `r sum(complete.cases(data) == FALSE)` observations contain missing values.
+```
+## 
+## FALSE  TRUE 
+##  2304 15264
+```
+
+In total 2304 observations contain missing values.
 
 - Devise a strategy for filling in all of the missing values in the dataset. 
 
 Note: The strategy does not need to be sophisticated. 
 
-```{r, echo = TRUE}
+
+```r
 table(data[complete.cases(data) == FALSE,"date"])
+```
+
+```
+## 
+## 2012-10-01 2012-10-08 2012-11-01 2012-11-04 2012-11-09 2012-11-10 
+##        288        288        288        288        288        288 
+## 2012-11-14 2012-11-30 
+##        288        288
 ```
 
 Eight days have no values at all. I'm going to impute these days with the average values
@@ -185,7 +273,8 @@ calculated in task 03.
 
 - Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r, echo = TRUE}
+
+```r
 data.imp <- merge(data, data.avg[,1:2], by = "interval")
 data.imp <- data.imp %>% 
   arrange(chron) %>%
@@ -196,7 +285,8 @@ data.imp <- data.imp %>%
 
 The data has to be grouped by day in order to add all steps of the day together.
 
-```{r, echo = TRUE}
+
+```r
 data.imp_total <- data.imp[,c("steps","date")] %>%
   group_by(date) %>%
   summarise(total_steps_day = sum(steps))
@@ -204,26 +294,42 @@ data.imp_total <- data.imp[,c("steps","date")] %>%
 hist(data.imp_total$total_steps_day, 25)
 ```
 
-```{r, echo = TRUE}
+![](./PA1_template_files/figure-html/unnamed-chunk-14-1.png) 
+
+
+```r
 summary(data.imp_total$total_steps_day, digits = 5)
 ```
 
-The mean `r as.character(round(mean(data.imp_total$total_steps_day, na.rm = TRUE),2))` remains unchanged but the median `r as.character(round(median(data.imp_total$total_steps_day, na.rm = TRUE),2))` has adapted to the median. The reason for this is that we imputed the same value for all eight days because it is very unlikely to measure the dead even value on multiple days.
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9819   10766   10766   12811   21194
+```
+
+The mean 10766.19 remains unchanged but the median 10766.19 has adapted to the median. The reason for this is that we imputed the same value for all eight days because it is very unlikely to measure the dead even value on multiple days.
 
 ## 05: Are there differences in activity patterns between weekdays and weekends?
 
 - Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
-```{r, echo = TRUE}
+
+```r
 data.imp$weekday <- ifelse(weekdays(data.imp$date) %in% c("Samstag","Sonntag"),
                            "weekend","weekday")
 
 table(data.imp$weekday)
 ```
 
+```
+## 
+## weekday weekend 
+##   12960    4608
+```
+
 - Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
-```{r, echo = TRUE, fig.height = 7}
+
+```r
 data.imp_aggr <- data.imp %>%
   group_by(weekday, interval) %>%
   summarise(avg_steps = mean(steps))
@@ -254,3 +360,5 @@ plot(data.imp_aggr[data.imp_aggr$weekday == "weekend",]$test,
 mtext("time", side = 1, outer = TRUE, cex = 0.7, line = 2.2, col = "grey20")
 mtext("number of steps", side = 2, outer = TRUE, cex = 0.7, line = 2.2, col = "grey20")
 ```
+
+![](./PA1_template_files/figure-html/unnamed-chunk-17-1.png) 
